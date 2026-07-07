@@ -1,0 +1,128 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-texteditor"
+
+// Values
+pub fn default_options() -> MarkdownOptions
+
+pub fn escape_html(String) -> String
+
+pub fn is_all_same_char(String, UInt16) -> Bool
+
+pub fn parse(String) -> Array[Block]
+
+pub fn parse_blocks(Array[Line]) -> Array[Block]
+
+pub fn parse_inlines(String) -> Array[Inline]
+
+pub fn parse_inlines_full(String, MarkdownOptions) -> Array[Inline]
+
+pub fn parse_int(String) -> Int
+
+pub fn parse_with_opts(String, MarkdownOptions) -> Array[Block]
+
+pub fn render(Array[Block]) -> String
+
+pub fn render_html(Array[Block]) -> String
+
+pub fn render_html_with_opts(Array[Block], MarkdownOptions) -> String
+
+pub fn render_to_string(String) -> String
+
+pub fn render_to_string_with_opts(String, MarkdownOptions) -> String
+
+pub fn starts_with(String, String) -> Bool
+
+pub fn tokenize(String) -> Array[Line]
+
+pub fn trim_end(String) -> String
+
+// Errors
+
+// Types and methods
+pub enum Block {
+  Document(Array[Block])
+  Paragraph(Array[Inline])
+  Heading(Int, Array[Inline])
+  BulletList(Array[ListItem], Bool)
+  OrderedList(Array[ListItem], Int, Bool)
+  ListItem(Bool, Array[Block])
+  FencedCodeBlock(String?, String)
+  IndentedCodeBlock(String)
+  BlockQuote(Array[Block])
+  ThematicBreak
+  HtmlBlock(String)
+  Table(Array[TableRow])
+  BlankLine
+}
+
+pub struct HtmlRenderer {
+  options : MarkdownOptions
+}
+pub fn HtmlRenderer::new() -> Self
+pub fn HtmlRenderer::new_with_opts(MarkdownOptions) -> Self
+pub fn HtmlRenderer::render_block(Self, Block, StringBuilder) -> Unit
+pub fn HtmlRenderer::render_blocks(Self, Array[Block]) -> String
+pub fn HtmlRenderer::render_inlines(Self, Array[Inline], StringBuilder) -> Unit
+
+pub enum Inline {
+  Text(String)
+  SoftBreak
+  LineBreak
+  Emphasis(Array[Inline])
+  Strong(Array[Inline])
+  Strikethrough(Array[Inline])
+  Code(String)
+  Link(Array[Inline], String, String?)
+  Image(String, String, String?)
+  HtmlInline(String)
+  AutoLink(String, Bool)
+}
+
+pub struct Line {
+  typ : LineType
+  content : String
+  indent : Int
+  line_number : Int
+  raw : String
+}
+
+pub enum LineType {
+  Heading(Int)
+  FenceStart(String?)
+  FenceEnd
+  BulletItem(String)
+  OrderedItem(Int)
+  BlockQuote
+  ThematicBreak
+  Empty
+  IndentedCode
+  TableRow
+  Paragraph
+}
+
+pub struct ListItem {
+  checked : Bool
+  children : Array[Block]
+}
+
+pub struct MarkdownOptions {
+  enable_gfm_tables : Bool
+  enable_gfm_tasklist : Bool
+  enable_gfm_strikethrough : Bool
+  enable_gfm_autolink : Bool
+  enable_syntax_highlight : Bool
+  hard_wrap : Bool
+}
+
+pub struct TableRow {
+  cells : Array[String]
+}
+
+// Type aliases
+
+// Traits
+pub(open) trait Renderer {
+  fn render_blocks(Self, Array[Block], StringBuilder) -> Unit
+  fn render_inlines(Self, Array[Inline], StringBuilder) -> Unit
+}
+
