@@ -1,5 +1,5 @@
 import {
-  "moonbit-texteditor" @md,
+  "moonbit-texteditor/src" @md,
 }
 
 options(

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "moonbit-texteditor"
+package "moonbit-texteditor/src"
 
 // Values
 pub fn default_options() -> MarkdownOptions
