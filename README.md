@@ -437,3 +437,29 @@ pub fn render_to_string_with_opts(input : String, opts : MarkdownOptions) -> Str
 | 嵌套列表边界情况多 | 使用递归下降 + 缩进栈管理，测试覆盖所有嵌套场景 |
 | 代码量不足 4k | 提前规划 GFM 扩展和语法高亮作为"代码量缓冲" |
 | MoonBit API 版本变化 | 锁定月亮版本，关注更新日志，统一适配 |
+
+---
+
+## 原创或移植说明
+
+本项目基于 **CommonMark 0.31 规范** 和 **GitHub Flavored Markdown (GFM) 规范** 使用 MoonBit 语言进行原创实现。
+
+### 参考来源
+
+| 项目名称 | 链接 | 许可证 | 参考内容 |
+|---------|------|--------|---------|
+| CommonMark Spec | `https://spec.commonmark.org/0.31/` | CC-BY-SA 4.0 | 语法规则、解析算法伪代码、测试用例 |
+
+本项目的解析逻辑直接基于 CommonMark 规范文档中的算法描述实现，未直接复制或移植任何现有开源项目的源代码。
+
+### 本项目许可证
+
+Apache License 2.0
+
+### 设计与实现特点
+
+- 使用 MoonBit 原生包结构、`enum` + `match` 类型系统和测试方式组织代码，而不是复刻 C/JavaScript 的函数式风格；
+- 优先实现可在 MoonBit 中独立运行的核心解析能力，弱化对外部运行时或动态链接库的依赖；
+- 对 CommonMark 规范中的 edge case（如嵌套强调、围栏代码块结束规则、列表紧凑模式判断）严格实现；
+- 对字符串处理和正则表达式等机制进行 MoonBit 化改写，使用 `StringBuilder` 和模式匹配替代；
+- 以 HTML 输出和 MoonBit API 为主要交付接口，方便接入 Web、CLI、IDE 和可视化渲染场景。
