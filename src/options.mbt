@@ -27,3 +27,24 @@ pub fn default_options() -> MarkdownOptions {
     hard_wrap: false,
   }
 }
+
+///|
+/// Create a MarkdownOptions with custom settings.
+/// Pass `true` to enable each feature.
+pub fn create_markdown_options(
+  enable_gfm_tables : Bool,
+  enable_gfm_tasklist : Bool,
+  enable_gfm_strikethrough : Bool,
+  enable_gfm_autolink : Bool,
+  enable_syntax_highlight : Bool,
+  hard_wrap : Bool,
+) -> MarkdownOptions {
+  MarkdownOptions::{
+    enable_gfm_tables,
+    enable_gfm_tasklist,
+    enable_gfm_strikethrough,
+    enable_gfm_autolink,
+    enable_syntax_highlight,
+    hard_wrap,
+  }
+}

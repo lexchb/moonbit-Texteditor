@@ -2,6 +2,8 @@
 package "moonbit-texteditor/src"
 
 // Values
+pub fn create_markdown_options(Bool, Bool, Bool, Bool, Bool, Bool) -> MarkdownOptions
+
 pub fn default_options() -> MarkdownOptions
 
 pub fn escape_html(String) -> String

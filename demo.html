@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonBit Markdown to HTML - 可视化演示</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --pink: #f778ba;
+    --hl-bg: #1c2128;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 40px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .header h1 {
+    font-size: 2.5em;
+    background: linear-gradient(135deg, var(--accent), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    color: var(--text-muted);
+    font-size: 1.1em;
+    margin-top: 10px;
+  }
+  .header .badge {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+  .badge.pass { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge.count { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); margin-left: 8px; }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 20px 0;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .stat-label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Feature card */
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: var(--accent); }
+  .feature-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .feature-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .icon-core { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .icon-gfm { background: rgba(63,185,80,0.15); color: var(--green); }
+  .icon-ext { background: rgba(247,120,186,0.15); color: var(--pink); }
+
+  .feature-title {
+    font-size: 1.05em;
+    font-weight: 600;
+  }
+  .feature-tag {
+    margin-left: auto;
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .tag-core { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .tag-gfm { background: rgba(63,185,80,0.15); color: var(--green); }
+  .tag-ext { background: rgba(247,120,186,0.15); color: var(--pink); }
+
+  /* Split view */
+  .split-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 768px) {
+    .split-view { grid-template-columns: 1fr; }
+  }
+  .split-pane {
+    padding: 16px 20px;
+    min-height: 80px;
+  }
+  .split-pane:first-child {
+    border-right: 1px solid var(--border);
+  }
+  @media (max-width: 768px) {
+    .split-pane:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+  .pane-label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .markdown-source {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .html-output {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    color: #7ee787;
+    line-height: 1.5;
+  }
+
+  /* Syntax highlighting styles */
+  .hl-keyword { color: #ff7b72; }
+  .hl-string { color: #a5d6ff; }
+  .hl-comment { color: #8b949e; font-style: italic; }
+  .hl-number { color: #79c0ff; }
+  .hl-type { color: #ffa657; }
+
+  /* Rendered HTML preview */
+  .rendered-preview {
+    padding: 20px;
+    background: #0d1117;
+    border-top: 1px solid var(--border);
+    line-height: 1.6;
+  }
+  .rendered-preview h1, .rendered-preview h2, .rendered-preview h3,
+  .rendered-preview h4, .rendered-preview h5, .rendered-preview h6 {
+    margin: 0.5em 0 0.3em;
+    color: var(--text);
+  }
+  .rendered-preview h1 { font-size: 1.6em; border-bottom: 1px solid var(--border); padding-bottom: 0.2em; }
+  .rendered-preview h2 { font-size: 1.3em; border-bottom: 1px solid var(--border); padding-bottom: 0.15em; }
+  .rendered-preview h3 { font-size: 1.1em; }
+  .rendered-preview p { margin: 0.4em 0; }
+  .rendered-preview ul, .rendered-preview ol { margin: 0.3em 0; padding-left: 1.5em; }
+  .rendered-preview li { margin: 0.15em 0; }
+  .rendered-preview blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    margin: 0.5em 0;
+    color: var(--text-muted);
+  }
+  .rendered-preview pre {
+    background: var(--hl-bg);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+  }
+  .rendered-preview code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.85em;
+  }
+  .rendered-preview p > code {
+    background: rgba(88,166,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .rendered-preview table {
+    border-collapse: collapse;
+    margin: 0.5em 0;
+    width: 100%;
+  }
+  .rendered-preview th, .rendered-preview td {
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    text-align: left;
+  }
+  .rendered-preview th {
+    background: var(--hl-bg);
+    font-weight: 600;
+  }
+  .rendered-preview hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1em 0;
+  }
+  .rendered-preview a { color: var(--accent); text-decoration: none; }
+  .rendered-preview a:hover { text-decoration: underline; }
+  .rendered-preview img { max-width: 100%; border-radius: 6px; }
+  .rendered-preview del { color: var(--text-muted); }
+  .preview-label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.9em;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  .footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>moonbit-texteditor</h1>
+    <p>纯 MoonBit 编写的 Markdown → HTML 转换库 · 可视化演示</p>
+    <div>
+      <span class="badge pass">47/47 测试通过</span>
+      <span class="badge count">13 项功能</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value">13</div><div class="stat-label">CommonMark</div></div>
+    <div class="stat"><div class="stat-value">5</div><div class="stat-label">GFM 扩展</div></div>
+    <div class="stat"><div class="stat-value">3</div><div class="stat-label">增强功能</div></div>
+    <div class="stat"><div class="stat-value">47</div><div class="stat-label">测试用例</div></div>
+  </div>
+
+  <!-- 1. Headings -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">H</div>
+      <span class="feature-title">标题 &amp; 段落</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source"># Heading 1
+
+## Heading 2
+
+### Heading 3
+
+This is a paragraph with **bold** and
+*italic* text.
+
+Another paragraph with `inline code`.</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;h1&gt;Heading 1&lt;/h1&gt;
+&lt;h2&gt;Heading 2&lt;/h2&gt;
+&lt;h3&gt;Heading 3&lt;/h3&gt;
+&lt;p&gt;This is a paragraph with
+&lt;strong&gt;bold&lt;/strong&gt; and
+&lt;em&gt;italic&lt;/em&gt; text.&lt;/p&gt;
+&lt;p&gt;Another paragraph with
+&lt;code&gt;inline code&lt;/code&gt;.&lt;/p&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <h1>Heading 1</h1>
+      <h2>Heading 2</h2>
+      <h3>Heading 3</h3>
+      <p>This is a paragraph with <strong>bold</strong> and <em>italic</em> text.</p>
+      <p>Another paragraph with <code>inline code</code>.</p>
+    </div>
+  </div>
+
+  <!-- 2. Lists -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">≡</div>
+      <span class="feature-title">无序 &amp; 有序列表</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">- Bullet item 1
+- Bullet item 2
+- Bullet item 3
+
+1. Ordered item 1
+2. Ordered item 2</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Bullet item 1&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Bullet item 2&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Bullet item 3&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Ordered item 1&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Ordered item 2&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <ul>
+        <li>Bullet item 1</li>
+        <li>Bullet item 2</li>
+        <li>Bullet item 3</li>
+      </ul>
+      <ol>
+        <li>Ordered item 1</li>
+        <li>Ordered item 2</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 3. Block Quote -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">❝</div>
+      <span class="feature-title">块引用（支持嵌套）</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">&gt; This is a block quote
+&gt; with multiple lines
+&gt;
+&gt; &gt; And a nested quote</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;blockquote&gt;
+&lt;p&gt;This is a block quote
+with multiple lines&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;And a nested quote&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <blockquote>
+        <p>This is a block quote with multiple lines</p>
+        <blockquote>
+          <p>And a nested quote</p>
+        </blockquote>
+      </blockquote>
+    </div>
+  </div>
+
+  <!-- 4. Code Blocks -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">&lt;/&gt;</div>
+      <span class="feature-title">代码块（围栏式 &amp; 缩进式）</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">```rust
+fn main() {
+    println!("Hello!");
+}
+```
+
+    indented code block</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;pre&gt;&lt;code
+class="language-rust"&gt;fn main() {
+    println!("Hello!");
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;indented code block
+&lt;/code&gt;&lt;/pre&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <pre><code class="language-rust">fn main() {
+    println!("Hello!");
+}</code></pre>
+      <pre><code>indented code block</code></pre>
+    </div>
+  </div>
+
+  <!-- 5. Links & Images -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">🔗</div>
+      <span class="feature-title">链接 &amp; 图片</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">[Click here](https://example.com "Example")
+
+![MoonBit](https://www.moonbitlang.com/favicon.ico)</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;p&gt;&lt;a href="https://example.com"
+title="Example"&gt;Click here&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://www.moonbitlang.com/favicon.ico"
+alt="MoonBit" /&gt;&lt;/p&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <p><a href="https://example.com" title="Example">Click here</a></p>
+      <p><img src="https://www.moonbitlang.com/favicon.ico" alt="MoonBit" style="width:48px;height:48px" onerror="this.style.display='none'" /></p>
+    </div>
+  </div>
+
+  <!-- 6. Thematic Break -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-core">─</div>
+      <span class="feature-title">水平分割线</span>
+      <span class="feature-tag tag-core">CommonMark</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">Before
+
+---
+
+After
+
+***
+
+___</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;p&gt;Before&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;After&lt;/p&gt;
+&lt;hr /&gt;
+&lt;hr /&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <p>Before</p>
+      <hr />
+      <p>After</p>
+      <hr />
+    </div>
+  </div>
+
+  <!-- 7. GFM Table -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-gfm">⊞</div>
+      <span class="feature-title">GFM 表格</span>
+      <span class="feature-tag tag-gfm">GFM 扩展</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">| Feature | Status | Priority |
+|---------|--------|----------|
+| Tables  | ✅ Done | High     |
+| Task Lists | ✅ Done | High |
+| Strikethrough | ✅ Done | Medium |</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;table&gt;
+&lt;tr&gt;&lt;td&gt;Feature&lt;/td&gt;
+&lt;td&gt;Status&lt;/td&gt;
+&lt;td&gt;Priority&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Tables&lt;/td&gt;
+&lt;td&gt;✅ Done&lt;/td&gt;
+&lt;td&gt;High&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Task Lists&lt;/td&gt;
+&lt;td&gt;✅ Done&lt;/td&gt;
+&lt;td&gt;High&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;Strikethrough&lt;/td&gt;
+&lt;td&gt;✅ Done&lt;/td&gt;
+&lt;td&gt;Medium&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <table>
+        <tr><td>Feature</td><td>Status</td><td>Priority</td></tr>
+        <tr><td>Tables</td><td>✅ Done</td><td>High</td></tr>
+        <tr><td>Task Lists</td><td>✅ Done</td><td>High</td></tr>
+        <tr><td>Strikethrough</td><td>✅ Done</td><td>Medium</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 8. Task List -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-gfm">☑</div>
+      <span class="feature-title">GFM 任务列表</span>
+      <span class="feature-tag tag-gfm">GFM 扩展</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">- [x] Completed task
+- [ ] Pending task
+- [ ] Another todo
+- Normal list item</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;Completed task&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Pending task&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Another todo&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Normal list item&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <ul>
+        <li><input type="checkbox" disabled checked /> Completed task</li>
+        <li><input type="checkbox" disabled /> Pending task</li>
+        <li><input type="checkbox" disabled /> Another todo</li>
+        <li>Normal list item</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 9. Strikethrough + Autolink -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-gfm">~</div>
+      <span class="feature-title">删除线 &amp; 自动链接</span>
+      <span class="feature-tag tag-gfm">GFM 扩展</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">This is ~~strikethrough~~ text.
+
+Visit https://moonbitlang.com for more.</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;p&gt;This is
+&lt;del&gt;strikethrough&lt;/del&gt;
+text.&lt;/p&gt;
+&lt;p&gt;Visit
+&lt;a href="https://moonbitlang.com"&gt;https://moonbitlang.com&lt;/a&gt;
+for more.&lt;/p&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <p>This is <del>strikethrough</del> text.</p>
+      <p>Visit <a href="https://moonbitlang.com">https://moonbitlang.com</a> for more.</p>
+    </div>
+  </div>
+
+  <!-- 10. Syntax Highlighting -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-ext">◈</div>
+      <span class="feature-title">语法高亮</span>
+      <span class="feature-tag tag-ext">增强功能</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">```rust
+fn fibonacci(n: u32) -> u32 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1)
+             + fibonacci(n - 2),
+    }
+}
+```</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出（带高亮）</div>
+        <div class="html-output">&lt;pre&gt;&lt;code class="language-rust"&gt;
+&lt;span class="hl-keyword"&gt;fn&lt;/span&gt;
+fibonacci(n: &lt;span class="hl-type"&gt;u32&lt;/span&gt;)
+-&gt; &lt;span class="hl-type"&gt;u32&lt;/span&gt; {
+    &lt;span class="hl-keyword"&gt;match&lt;/span&gt; n {
+        0 =&gt; &lt;span class="hl-number"&gt;0&lt;/span&gt;,
+        1 =&gt; &lt;span class="hl-number"&gt;1&lt;/span&gt;,
+        &lt;span class="hl-keyword"&gt;_&lt;/span&gt; =&gt; fibonacci(n - &lt;span class="hl-number"&gt;1&lt;/span&gt;)
+             + fibonacci(n - &lt;span class="hl-number"&gt;2&lt;/span&gt;),
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果（带高亮）</div>
+      <pre><code class="language-rust"><span class="hl-keyword">fn</span> fibonacci(n: <span class="hl-type">u32</span>) -> <span class="hl-type">u32</span> {
+    <span class="hl-keyword">match</span> n {
+        <span class="hl-number">0</span> => <span class="hl-number">0</span>,
+        <span class="hl-number">1</span> => <span class="hl-number">1</span>,
+        <span class="hl-keyword">_</span> => fibonacci(n - <span class="hl-number">1</span>)
+             + fibonacci(n - <span class="hl-number">2</span>),
+    }
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 11. Mixed Content -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-ext">✦</div>
+      <span class="feature-title">混合内容（全部功能）</span>
+      <span class="feature-tag tag-ext">综合演示</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source"># Project Overview
+
+This is a **Markdown to HTML**
+converter written in MoonBit.
+
+## Features
+
+- [x] CommonMark core syntax
+- [x] GFM tables &amp; task lists
+- [x] Auto-links &amp; strikethrough
+- [ ] Syntax highlighting (opt)
+
+> **Note:** Still in development.
+
+---
+
+Powered by [MoonBit](https://www.moonbitlang.com)</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">HTML 输出</div>
+        <div class="html-output">&lt;h1&gt;Project Overview&lt;/h1&gt;
+&lt;p&gt;This is a &lt;strong&gt;Markdown to HTML&lt;/strong&gt;
+converter written in MoonBit.&lt;/p&gt;
+&lt;h2&gt;Features&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;CommonMark core syntax&lt;/li&gt;
+&lt;li&gt;GFM tables &amp;amp; task lists&lt;/li&gt;
+&lt;li&gt;Auto-links &amp;amp; strikethrough&lt;/li&gt;
+&lt;li&gt;Syntax highlighting (opt)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Still in development.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr /&gt;
+&lt;p&gt;Powered by
+&lt;a href="https://www.moonbitlang.com"&gt;MoonBit&lt;/a&gt;&lt;/p&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <h1>Project Overview</h1>
+      <p>This is a <strong>Markdown to HTML</strong> converter written in MoonBit.</p>
+      <h2>Features</h2>
+      <ul>
+        <li><input type="checkbox" disabled checked /> CommonMark core syntax</li>
+        <li><input type="checkbox" disabled checked /> GFM tables &amp; task lists</li>
+        <li><input type="checkbox" disabled checked /> Auto-links &amp; strikethrough</li>
+        <li><input type="checkbox" disabled /> Syntax highlighting (opt)</li>
+      </ul>
+      <blockquote>
+        <p><strong>Note:</strong> Still in development.</p>
+      </blockquote>
+      <hr />
+      <p>Powered by <a href="https://www.moonbitlang.com">MoonBit</a></p>
+    </div>
+  </div>
+
+  <!-- 12. Frontmatter -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-ext">📋</div>
+      <span class="feature-title">Frontmatter 元数据解析</span>
+      <span class="feature-tag tag-ext">增强功能</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source">---
+title: My Document
+author: MoonBit
+version: 1.0.0
+---
+
+# Document Title
+
+This is the document body.</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">解析结果</div>
+        <div class="html-output">Metadata:
+  title: My Document
+  author: MoonBit
+  version: 1.0.0
+
+Body:
+&lt;h1&gt;Document Title&lt;/h1&gt;
+&lt;p&gt;This is the document
+body.&lt;/p&gt;</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <p><strong>Metadata:</strong></p>
+      <ul>
+        <li>title: My Document</li>
+        <li>author: MoonBit</li>
+        <li>version: 1.0.0</li>
+      </ul>
+      <hr />
+      <h1>Document Title</h1>
+      <p>This is the document body.</p>
+    </div>
+  </div>
+
+  <!-- 13. TOC -->
+  <div class="feature-card">
+    <div class="feature-header">
+      <div class="feature-icon icon-ext">☰</div>
+      <span class="feature-title">TOC 目录生成</span>
+      <span class="feature-tag tag-ext">增强功能</span>
+    </div>
+    <div class="split-view">
+      <div class="split-pane">
+        <div class="pane-label">Markdown 输入</div>
+        <div class="markdown-source"># Title
+
+Intro text
+
+## Section 1
+
+Content
+
+### Subsection 1.1
+
+More content
+
+## Section 2
+
+Final content</div>
+      </div>
+      <div class="split-pane">
+        <div class="pane-label">TOC 输出</div>
+        <div class="html-output">[4 entries]
+
+H1: Title
+  H2: Section 1
+    H3: Subsection 1.1
+  H2: Section 2</div>
+      </div>
+    </div>
+    <div class="rendered-preview">
+      <div class="preview-label">预览效果</div>
+      <ul>
+        <li><strong>H1:</strong> Title</li>
+        <li><strong>H2:</strong> Section 1
+          <ul><li><strong>H3:</strong> Subsection 1.1</li></ul>
+        </li>
+        <li><strong>H2:</strong> Section 2</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>moonbit-texteditor · <a href="https://github.com/moonbitlang/moonbit-texteditor">GitHub</a> · Apache-2.0 License</p>
+    <p>运行 CLI demo: <code style="background:var(--hl-bg);padding:2px 8px;border-radius:4px;">moon run</code></p>
+  </div>
+</div>
+</body>
+</html>
