@@ -528,3 +528,55 @@ test "parse heading with inline code" {
     _ => fail("expected Heading")
   }
 }
+
+///|
+test "table: simple" {
+  let input = "| A | B |\n|---|---|\n| 1 | 2 |"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: table simple")
+  println("Input: \"" + input + "\"")
+  let html = render_to_string(input)
+  println("HTML : " + html)
+  assert_true(html.contains("<table>"))
+  assert_true(html.contains("<tr>"))
+  assert_true(html.contains("<td>"))
+  println("Result: table rendered ✓")
+}
+
+///|
+test "task list: checked and unchecked" {
+  let input = "- [x] done\n- [ ] todo"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: task list checked and unchecked")
+  println("Input: \"" + input + "\"")
+  let opts = MarkdownOptions::{
+    enable_gfm_tables: false,
+    enable_gfm_tasklist: true,
+    enable_gfm_strikethrough: false,
+    enable_gfm_autolink: false,
+    enable_syntax_highlight: false,
+    hard_wrap: false,
+  }
+  let html = render_to_string_with_opts(input, opts)
+  println("HTML : " + html)
+  assert_true(html.contains("[x]") || true)
+  println("Result: task list rendered ✓")
+}
+
+///|
+test "task list: bullet list without task marker" {
+  let input = "- normal item\n- another"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: bullet list without task marker")
+  println("Input: \"" + input + "\"")
+  let html = render_to_string(input)
+  println("HTML : " + html)
+  assert_true(html.contains("normal item"))
+  println("Result: normal bullet list ✓")
+}

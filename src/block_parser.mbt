@@ -1,6 +1,9 @@
 ///|
 /// Parse classified lines into a list of Block nodes.
-pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
+pub fn parse_blocks(
+  lines : Array[Line],
+  opts : MarkdownOptions,
+) -> Array[Block] {
   let blocks : Array[Block] = []
   let mut i = 0
   let n = lines.length()
@@ -10,7 +13,7 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
 
     match line.typ {
       Heading(level) => {
-        let inlines = parse_inlines(line.content)
+        let inlines = parse_inlines_full(line.content, opts)
         blocks.push(Heading(level, inlines))
         i = i + 1
       }
@@ -108,7 +111,7 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
         }
         let quote_text = quote_lines.join("\n")
         // Recursively parse the quote content
-        let inner_blocks = parse_blocks(tokenize(quote_text))
+        let inner_blocks = parse_blocks(tokenize(quote_text), opts)
         blocks.push(BlockQuote(inner_blocks))
       }
       BulletItem(_marker) => {
@@ -121,9 +124,25 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           match current.typ {
             BulletItem(_) => {
               // Single paragraph item
-              let inlines = parse_inlines(current.content)
+              let is_checked = current.content.length() >= 4 &&
+                current.content[0] == 91 && // '['
+                (current.content[1] == 120 || current.content[1] == 88) && // 'x' or 'X'
+                current.content[2] == 93 && // ']'
+                current.content[3] == 32 // ' '
+              let task_content = if is_checked {
+                current.content[4:].to_owned()
+              } else if current.content.length() >= 4 &&
+                current.content[0] == 91 && // '['
+                current.content[1] == 32 && // ' '
+                current.content[2] == 93 && // ']'
+                current.content[3] == 32 { // ' '
+                current.content[4:].to_owned()
+              } else {
+                current.content
+              }
+              let inlines = parse_inlines_full(task_content, opts)
               let children : Array[Block] = [Paragraph(inlines)]
-              items.push({ checked: false, children })
+              items.push({ checked: is_checked, children })
               i = i + 1
             }
             Empty => {
@@ -152,9 +171,25 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           let current = lines[i]
           match current.typ {
             OrderedItem(_) => {
-              let inlines = parse_inlines(current.content)
+              let is_checked = current.content.length() >= 4 &&
+                current.content[0] == 91 && // '['
+                (current.content[1] == 120 || current.content[1] == 88) && // 'x' or 'X'
+                current.content[2] == 93 && // ']'
+                current.content[3] == 32 // ' '
+              let task_content = if is_checked {
+                current.content[4:].to_owned()
+              } else if current.content.length() >= 4 &&
+                current.content[0] == 91 && // '['
+                current.content[1] == 32 && // ' '
+                current.content[2] == 93 && // ']'
+                current.content[3] == 32 { // ' '
+                current.content[4:].to_owned()
+              } else {
+                current.content
+              }
+              let inlines = parse_inlines_full(task_content, opts)
               let children : Array[Block] = [Paragraph(inlines)]
-              items.push({ checked: false, children })
+              items.push({ checked: is_checked, children })
               i = i + 1
             }
             Empty => {
@@ -173,9 +208,58 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
         blocks.push(OrderedList(items, 1, tight))
       }
       Empty => i = i + 1
-      TableRow =>
-        // Phase 2: Table support
+      TableRow => {
+        // Collect consecutive table rows
+        let rows : Array[String] = []
+        rows.push(line.raw) // Use raw content to preserve pipes
         i = i + 1
+        while i < n {
+          match lines[i].typ {
+            TableRow => {
+              rows.push(lines[i].raw)
+              i = i + 1
+            }
+            Empty => {
+              i = i + 1
+              break
+            }
+            _ => break
+          }
+        }
+
+        // Need at least 2 rows (header + separator)
+        if rows.length() >= 2 {
+          // Parse table structure
+          let header_cells = parse_table_row(rows[0])
+          let separator_cells = parse_table_row(rows[1])
+
+          // Check if second row is a separator (contains ---)
+          let is_separator = is_separator_row(separator_cells)
+
+          if is_separator {
+            // Standard table with header
+            let header_row = TableRow::{ cells: header_cells }
+            let body_rows : Array[TableRow] = []
+            let mut ri = 2
+            while ri < rows.length() {
+              let cells = parse_table_row(rows[ri])
+              body_rows.push(TableRow::{ cells, })
+              ri = ri + 1
+            }
+            blocks.push(Table([header_row] + body_rows))
+          } else {
+            // Not a proper table, treat all rows as body
+            let body_rows : Array[TableRow] = []
+            let mut ri = 0
+            while ri < rows.length() {
+              let cells = parse_table_row(rows[ri])
+              body_rows.push(TableRow::{ cells, })
+              ri = ri + 1
+            }
+            blocks.push(Table(body_rows))
+          }
+        }
+      }
       Paragraph => {
         // Collect consecutive paragraph lines
         let para_lines : Array[String] = []
@@ -196,11 +280,79 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           }
         }
         let para_text = para_lines.join(" ")
-        let inlines = parse_inlines(para_text)
+        let inlines = parse_inlines_full(para_text, opts)
         blocks.push(Paragraph(inlines))
       }
     }
   }
 
   blocks
+}
+
+///|
+/// Parse a table row string into cell strings.
+fn parse_table_row(row : String) -> Array[String] {
+  let cells : Array[String] = []
+  let trimmed = row.trim().to_owned()
+  let mut start = 0
+  // Remove leading |
+  if trimmed.length() > 0 && trimmed[0] == 124 {
+    start = 1
+  }
+  // Remove trailing |
+  let end = if trimmed.length() > 0 && trimmed[trimmed.length() - 1] == 124 {
+    trimmed.length() - 1
+  } else {
+    trimmed.length()
+  }
+  let content = trimmed[start:end].to_owned()
+  // Split by |
+  let mut i = 0
+  let mut cell_start = 0
+  while i < content.length() {
+    if content[i] == 124 { // '|'
+      cells.push(content[cell_start:i].trim().to_owned())
+      cell_start = i + 1
+    }
+    i = i + 1
+  }
+  if cell_start <= content.length() {
+    cells.push(content[cell_start:].trim().to_owned())
+  }
+  cells
+}
+
+///|
+/// Check if a row of cells is a table separator row (all cells contain only --- and optional :).
+fn is_separator_row(cells : Array[String]) -> Bool {
+  if cells.length() == 0 {
+    return false
+  }
+  for cell in cells {
+    let trimmed = cell.trim().to_owned()
+    if trimmed.length() == 0 {
+      return false
+    }
+    let mut i = 0
+    // Allow leading :
+    if trimmed.length() > 0 && trimmed[0] == 58 {
+      i = 1
+    }
+    // Allow trailing :
+    let end = if trimmed.length() > 0 && trimmed[trimmed.length() - 1] == 58 {
+      trimmed.length() - 1
+    } else {
+      trimmed.length()
+    }
+    while i < end {
+      if trimmed[i] != 45 {
+        return false
+      } // '-'
+      i = i + 1
+    }
+    if i == 0 || (i == 1 && trimmed[0] == 58) {
+      return false
+    } // need at least one dash
+  }
+  true
 }
