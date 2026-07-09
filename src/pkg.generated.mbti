@@ -55,6 +55,10 @@ pub enum Block {
   BlankLine
 }
 
+type DelimData
+
+type DelimInfo
+
 pub struct HtmlRenderer {
   options : MarkdownOptions
 }
@@ -77,6 +81,8 @@ pub enum Inline {
   HtmlInline(String)
   AutoLink(String, Bool)
 }
+
+type InlineNode
 
 pub struct Line {
   typ : LineType

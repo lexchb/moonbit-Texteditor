@@ -2,7 +2,9 @@
 /// Whitebox tests for block_parser
 test "parse heading level 1" {
   let input = "# Hello"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse heading level 1")
   println("Input: " + input)
   let blocks = parse(input)
@@ -28,7 +30,9 @@ test "parse heading level 1" {
 ///|
 test "parse heading level 3" {
   let input = "### Hello World"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse heading level 3")
   println("Input: " + input)
   let blocks = parse(input)
@@ -47,7 +51,9 @@ test "parse heading level 3" {
 ///|
 test "parse thematic break" {
   let input = "---"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse thematic break")
   println("Input: " + input)
   let blocks = parse(input)
@@ -63,7 +69,9 @@ test "parse thematic break" {
 ///|
 test "parse thematic break with stars" {
   let input = "***"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse thematic break with stars")
   println("Input: " + input)
   let blocks = parse(input)
@@ -79,7 +87,9 @@ test "parse thematic break with stars" {
 ///|
 test "parse paragraph" {
   let input = "Hello world"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse paragraph")
   println("Input: " + input)
   let blocks = parse(input)
@@ -104,7 +114,9 @@ test "parse paragraph" {
 ///|
 test "parse multi-line paragraph" {
   let input = "Hello\nWorld"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse multi-line paragraph")
   println("Input: \"Hello\\nWorld\"")
   let blocks = parse(input)
@@ -127,7 +139,9 @@ test "parse multi-line paragraph" {
 ///|
 test "parse indented code block" {
   let input = "    code line 1\n    code line 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse indented code block")
   println("Input: \"    code line 1\\n    code line 2\"")
   let blocks = parse(input)
@@ -146,7 +160,9 @@ test "parse indented code block" {
 ///|
 test "parse fenced code block without language" {
   let input = "```\ncode line 1\ncode line 2\n```"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse fenced code block without language")
   println("Input: \"```\\ncode line 1\\ncode line 2\\n```\"")
   let blocks = parse(input)
@@ -166,7 +182,9 @@ test "parse fenced code block without language" {
 ///|
 test "parse fenced code block with language" {
   let input = "```rust\nfn main() {}\n```"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse fenced code block with language")
   println("Input: \"```rust\\nfn main() {}\\n```\"")
   let blocks = parse(input)
@@ -191,7 +209,9 @@ test "parse fenced code block with language" {
 ///|
 test "parse fenced code block with tilde" {
   let input = "~~~\ncode line 1\n~~~"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse fenced code block with tilde")
   println("Input: \"~~~\\ncode line 1\\n~~~\"")
   let blocks = parse(input)
@@ -211,7 +231,9 @@ test "parse fenced code block with tilde" {
 ///|
 test "parse block quote simple" {
   let input = "> Hello"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse block quote simple")
   println("Input: " + input)
   let blocks = parse(input)
@@ -240,7 +262,9 @@ test "parse block quote simple" {
 ///|
 test "parse block quote multi-line" {
   let input = "> Line 1\n> Line 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse block quote multi-line")
   println("Input: \"> Line 1\\n> Line 2\"")
   let blocks = parse(input)
@@ -259,7 +283,9 @@ test "parse block quote multi-line" {
 ///|
 test "parse block quote with heading" {
   let input = "> # Title\n> Text"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse block quote with heading")
   println("Input: \"> # Title\\n> Text\"")
   let blocks = parse(input)
@@ -284,7 +310,9 @@ test "parse block quote with heading" {
 ///|
 test "parse bullet list tight" {
   let input = "- Item 1\n- Item 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse bullet list tight")
   println("Input: \"- Item 1\\n- Item 2\"")
   let blocks = parse(input)
@@ -304,7 +332,9 @@ test "parse bullet list tight" {
 ///|
 test "parse bullet list with star" {
   let input = "* Item 1\n* Item 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse bullet list with star")
   println("Input: \"* Item 1\\n* Item 2\"")
   let blocks = parse(input)
@@ -323,7 +353,9 @@ test "parse bullet list with star" {
 ///|
 test "parse bullet list loose" {
   let input = "- Item 1\n\n- Item 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse bullet list loose")
   println("Input: \"- Item 1\\n\\n- Item 2\"")
   let blocks = parse(input)
@@ -342,7 +374,9 @@ test "parse bullet list loose" {
 ///|
 test "parse ordered list" {
   let input = "1. First\n2. Second"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse ordered list")
   println("Input: \"1. First\\n2. Second\"")
   let blocks = parse(input)
@@ -363,7 +397,9 @@ test "parse ordered list" {
 ///|
 test "parse inline code" {
   let input = "Text with `code` inside"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse inline code")
   println("Input: " + input)
   let blocks = parse(input)
@@ -396,9 +432,13 @@ test "parse inline code" {
 ///|
 test "parse mixed content" {
   let input = "# Title\n\nA paragraph with `code`.\n\n- List item 1\n- List item 2"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse mixed content")
-  println("Input: \"# Title\\n\\nA paragraph with `code`.\\n\\n- List item 1\\n- List item 2\"")
+  println(
+    "Input: \"# Title\\n\\nA paragraph with `code`.\\n\\n- List item 1\\n- List item 2\"",
+  )
   let blocks = parse(input)
   println("Blocks: " + blocks.length().to_string())
   println("HTML : " + render_to_string(input))
@@ -423,7 +463,9 @@ test "parse mixed content" {
 ///|
 test "parse empty input" {
   let input = ""
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse empty input")
   println("Input: (empty string)")
   let blocks = parse(input)
@@ -436,7 +478,9 @@ test "parse empty input" {
 ///|
 test "parse thematic break between paragraphs" {
   let input = "Before\n\n---\n\nAfter"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse thematic break between paragraphs")
   println("Input: \"Before\\n\\n---\\n\\nAfter\"")
   let blocks = parse(input)
@@ -461,7 +505,9 @@ test "parse thematic break between paragraphs" {
 ///|
 test "parse heading with inline code" {
   let input = "# Title with `code`"
-  println("──────────────────────────────────")
+  println(
+    "──────────────────────────────────",
+  )
   println("Test: parse heading with inline code")
   println("Input: " + input)
   let blocks = parse(input)
