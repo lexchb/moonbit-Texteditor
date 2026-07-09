@@ -580,3 +580,104 @@ test "task list: bullet list without task marker" {
   assert_true(html.contains("normal item"))
   println("Result: normal bullet list ✓")
 }
+
+///|
+test "syntax highlighting: rust code block" {
+  let input = "```rust\nfn hello() {\n    println!(\"Hello\");\n}\n```"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: syntax highlighting rust code block")
+  let opts = MarkdownOptions::{
+    enable_gfm_tables: false,
+    enable_gfm_tasklist: false,
+    enable_gfm_strikethrough: false,
+    enable_gfm_autolink: false,
+    enable_syntax_highlight: true,
+    hard_wrap: false,
+  }
+  let html = render_to_string_with_opts(input, opts)
+  println("HTML : " + html)
+  assert_true(html.contains("hl-keyword"))
+  assert_true(html.contains("hl-string"))
+  println("Result: syntax highlighting with hl-keyword and hl-string ✓")
+}
+
+///|
+test "syntax highlighting: disabled by default" {
+  let input = "```rust\nfn hello() {}\n```"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: syntax highlighting disabled by default")
+  let html = render_to_string(input)
+  println("HTML : " + html)
+  println("Result: no hl-* spans when disabled ✓")
+}
+
+///|
+test "frontmatter: parse metadata" {
+  let input = "---\ntitle: My Document\nauthor: John\n---\n\n# Hello"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: frontmatter parse metadata")
+  let (metadata, remaining) = parse_frontmatter(input)
+  println("Metadata count: " + metadata.length().to_string())
+  println("Remaining: " + remaining)
+  assert_eq(metadata.length(), 2)
+  let (k1, v1) = metadata[0]
+  assert_eq(k1, "title")
+  assert_eq(v1, "My Document")
+  let (k2, v2) = metadata[1]
+  assert_eq(k2, "author")
+  assert_eq(v2, "John")
+  assert_true(remaining.contains("# Hello"))
+  println("Result: frontmatter parsed correctly ✓")
+}
+
+///|
+test "frontmatter: no frontmatter returns entire input" {
+  let input = "# Just a heading\n\nSome text"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: frontmatter no frontmatter")
+  let (metadata, remaining) = parse_frontmatter(input)
+  assert_eq(metadata.length(), 0)
+  assert_eq(remaining, input)
+  println("Result: no metadata, entire input returned ✓")
+}
+
+///|
+test "toc: generate table of contents" {
+  let input = "# Title\n\n## Section 1\n\nSome text\n\n### Subsection\n\n## Section 2"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: generate table of contents")
+  let blocks = parse(input)
+  let toc = generate_toc(blocks)
+  assert_eq(toc.length(), 4)
+  let (l1, t1) = toc[0]
+  assert_eq(l1, 1)
+  assert_eq(t1, "Title")
+  let (l2, t2) = toc[1]
+  assert_eq(l2, 2)
+  assert_eq(t2, "Section 1")
+  let (l3, t3) = toc[2]
+  assert_eq(l3, 3)
+  assert_eq(t3, "Subsection")
+  let (l4, t4) = toc[3]
+  assert_eq(l4, 2)
+  assert_eq(t4, "Section 2")
+  println("Result: TOC with 4 entries ✓")
+}
+
+///|
+test "toc: empty blocks returns empty toc" {
+  let blocks : Array[Block] = []
+  let toc = generate_toc(blocks)
+  assert_eq(toc.length(), 0)
+  println("Result: empty TOC ✓")
+}
