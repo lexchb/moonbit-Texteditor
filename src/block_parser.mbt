@@ -10,7 +10,7 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
 
     match line.typ {
       Heading(level) => {
-        let inlines = parse_inlines_simple(line.content)
+        let inlines = parse_inlines(line.content)
         blocks.push(Heading(level, inlines))
         i = i + 1
       }
@@ -121,7 +121,7 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           match current.typ {
             BulletItem(_) => {
               // Single paragraph item
-              let inlines = parse_inlines_simple(current.content)
+              let inlines = parse_inlines(current.content)
               let children : Array[Block] = [Paragraph(inlines)]
               items.push({ checked: false, children })
               i = i + 1
@@ -152,7 +152,7 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           let current = lines[i]
           match current.typ {
             OrderedItem(_) => {
-              let inlines = parse_inlines_simple(current.content)
+              let inlines = parse_inlines(current.content)
               let children : Array[Block] = [Paragraph(inlines)]
               items.push({ checked: false, children })
               i = i + 1
@@ -196,54 +196,11 @@ pub fn parse_blocks(lines : Array[Line]) -> Array[Block] {
           }
         }
         let para_text = para_lines.join(" ")
-        let inlines = parse_inlines_simple(para_text)
+        let inlines = parse_inlines(para_text)
         blocks.push(Paragraph(inlines))
       }
     }
   }
 
   blocks
-}
-
-///|
-/// Very simple inline parser for Phase 1.
-/// Parses: Text, Code (backtick).
-/// Emphasis, Link, etc will be added in Phase 2.
-fn parse_inlines_simple(text : String) -> Array[Inline] {
-  let result : Array[Inline] = []
-  let mut i = 0
-  let n = text.length()
-
-  while i < n {
-    // Inline code: `...`
-    if text[i] == 96 { // '`'
-      let mut j = i + 1
-      while j < n && text[j] != 96 {
-        j = j + 1
-      }
-      if j < n {
-        // Properly closed inline code
-        let code_content = text[i + 1:j].to_owned()
-        result.push(Code(code_content))
-        i = j + 1
-      } else {
-        // Unclosed backtick, treat as text
-        result.push(Text("`"))
-        i = i + 1
-      }
-    } else {
-      // Collect consecutive text characters until a special char is found
-      let mut j = i
-      while j < n && text[j] != 96 { // '`'
-        j = j + 1
-      }
-      let text_content = text[i:j].to_owned()
-      if text_content.length() > 0 {
-        result.push(Text(text_content))
-      }
-      i = j
-    }
-  }
-
-  result
 }
