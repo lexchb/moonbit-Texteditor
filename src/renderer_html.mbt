@@ -67,7 +67,15 @@ pub fn HtmlRenderer::render_block(
         None => ()
       }
       buf.write_string(">")
-      buf.write_string(escape_html(code))
+      let rendered = if self.options.enable_syntax_highlight {
+        match lang {
+          Some(l) => highlight_code(code, l)
+          None => escape_html(code)
+        }
+      } else {
+        escape_html(code)
+      }
+      buf.write_string(rendered)
       buf.write_string("</code></pre>\n")
     }
     BlockQuote(children) => {

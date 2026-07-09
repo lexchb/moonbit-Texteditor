@@ -6,11 +6,17 @@ pub fn default_options() -> MarkdownOptions
 
 pub fn escape_html(String) -> String
 
+pub fn generate_toc(Array[Block]) -> Array[(Int, String)]
+
+pub fn highlight_code(String, String) -> String
+
 pub fn is_all_same_char(String, UInt16) -> Bool
 
 pub fn parse(String) -> Array[Block]
 
 pub fn parse_blocks(Array[Line], MarkdownOptions) -> Array[Block]
+
+pub fn parse_frontmatter(String) -> (Array[(String, String)], String)
 
 pub fn parse_inlines(String) -> Array[Inline]
 
