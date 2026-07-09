@@ -210,7 +210,7 @@ test "unmatched delimiter rendered as text" {
 }
 
 ///|
-test "emphasis: mixed star and underscore" {
+test "mixed emphasis and strong" {
   let input = "*italic* and _italic_ and **bold** and __bold__"
   println(
     "──────────────────────────────────",
@@ -222,4 +222,48 @@ test "emphasis: mixed star and underscore" {
   assert_true(html.contains("<em>italic</em>"))
   assert_true(html.contains("<strong>bold</strong>"))
   println("Result: mixed emphasis ✓")
+}
+
+///|
+test "strikethrough: simple" {
+  let input = "Hello ~~world~~ test"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: strikethrough simple")
+  println("Input: " + input)
+  let opts = MarkdownOptions::{
+    enable_gfm_tables: false,
+    enable_gfm_tasklist: false,
+    enable_gfm_strikethrough: true,
+    enable_gfm_autolink: false,
+    enable_syntax_highlight: false,
+    hard_wrap: false,
+  }
+  let html = render_to_string_with_opts(input, opts)
+  println("HTML : " + html)
+  assert_true(html.contains("<del>world</del>"))
+  println("Result: <del>world</del> ✓")
+}
+
+///|
+test "autolink: https url" {
+  let input = "Visit https://example.com/page now"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: autolink https url")
+  println("Input: " + input)
+  let opts = MarkdownOptions::{
+    enable_gfm_tables: false,
+    enable_gfm_tasklist: false,
+    enable_gfm_strikethrough: false,
+    enable_gfm_autolink: true,
+    enable_syntax_highlight: false,
+    hard_wrap: false,
+  }
+  let html = render_to_string_with_opts(input, opts)
+  println("HTML : " + html)
+  assert_true(html.contains("<a href=\"https://example.com/page\">"))
+  println("Result: <a href=\"...\"> ✓")
 }

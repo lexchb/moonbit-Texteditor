@@ -46,9 +46,9 @@ pub fn parse_inlines(text : String) -> Array[Inline] {
 /// Parse inline content with full feature support (Phase 2).
 pub fn parse_inlines_full(
   text : String,
-  _opts : MarkdownOptions,
+  opts : MarkdownOptions,
 ) -> Array[Inline] {
-  let nodes = scan_to_nodes(text)
+  let nodes = scan_to_nodes(text, opts)
   resolve_emphasis(nodes)
 }
 
@@ -69,7 +69,7 @@ fn is_ws(ch : UInt16) -> Bool {
 
 ///|
 /// Scan text into an intermediate array of InlineNode values.
-fn scan_to_nodes(text : String) -> Array[InlineNode] {
+fn scan_to_nodes(text : String, opts : MarkdownOptions) -> Array[InlineNode] {
   let nodes : Array[InlineNode] = []
   let n = text.length()
   let mut i = 0
@@ -137,6 +137,33 @@ fn scan_to_nodes(text : String) -> Array[InlineNode] {
           continue
         }
         None => ()
+      }
+    }
+
+    // 3.5. Strikethrough: ~~text~~ (GFM extension)
+    if opts.enable_gfm_strikethrough &&
+      ch == 126 &&
+      i + 1 < n &&
+      text[i + 1] == 126 {
+      // Find closing ~~
+      let mut j = i + 2
+      while j < n {
+        if j + 1 < n && text[j] == 126 && text[j + 1] == 126 {
+          break
+        }
+        if text[j] == 10 {
+          break
+        } // don't cross lines
+        j = j + 1
+      }
+      if j < n && j + 1 < n && text[j] == 126 && text[j + 1] == 126 {
+        // Parse inner content recursively
+        let inner_text = text[i + 2:j].to_owned()
+        let inner_nodes = scan_to_nodes(inner_text, opts)
+        let inner_result = resolve_emphasis(inner_nodes)
+        nodes.push(Final(Strikethrough(inner_result)))
+        i = j + 2
+        continue
       }
     }
 
@@ -218,13 +245,23 @@ fn scan_to_nodes(text : String) -> Array[InlineNode] {
         c == 95 ||
         c == 33 ||
         c == 91 ||
-        c == 10 {
+        c == 10 ||
+        c == 126 {
         break
       }
       j = j + 1
     }
     if j > i {
-      nodes.push(Final(Text(text[i:j].to_owned())))
+      let raw_text = text[i:j].to_owned()
+      // Check for autolinks in text (GFM extension)
+      let processed = if opts.enable_gfm_autolink {
+        process_autolinks(raw_text)
+      } else {
+        [Text(raw_text)]
+      }
+      for node in processed {
+        nodes.push(Final(node))
+      }
       i = j
     } else {
       // Single char that fell through
@@ -234,6 +271,63 @@ fn scan_to_nodes(text : String) -> Array[InlineNode] {
   }
 
   nodes
+}
+
+///|
+/// Try to process autolinks in a text string.
+/// Returns a list of Inline nodes, splitting at autolink boundaries.
+fn process_autolinks(text : String) -> Array[Inline] {
+  let result : Array[Inline] = []
+  let n = text.length()
+  let mut pos = 0
+  while pos < n {
+    // Search for http:// or https:// starting at any position
+    let mut url_start = -1
+    let mut is_https = false
+    let mut search = pos
+    while search < n {
+      if search + 8 <= n && text[search:search + 8].to_owned() == "https://" {
+        url_start = search
+        is_https = true
+        break
+      } else if search + 7 <= n &&
+        text[search:search + 7].to_owned() == "http://" {
+        url_start = search
+        is_https = false
+        break
+      }
+      search = search + 1
+    }
+
+    if url_start < 0 {
+      // No URL found, add remaining as text
+      if pos < n {
+        result.push(Text(text[pos:n].to_owned()))
+      }
+      break
+    }
+
+    // Add text before URL
+    if url_start > pos {
+      result.push(Text(text[pos:url_start].to_owned()))
+    }
+
+    // Scan URL end
+    let url_scan_start = if is_https { url_start + 8 } else { url_start + 7 }
+    let mut j = url_scan_start
+    while j < n {
+      let c = text[j]
+      if is_ws(c) || c == 93 || c == 41 || c == 34 || c == 39 {
+        break
+      }
+      j = j + 1
+    }
+
+    let url = text[url_start:j].to_owned()
+    result.push(AutoLink(url, false))
+    pos = j
+  }
+  result
 }
 
 ///|
