@@ -10,7 +10,7 @@ pub fn is_all_same_char(String, UInt16) -> Bool
 
 pub fn parse(String) -> Array[Block]
 
-pub fn parse_blocks(Array[Line]) -> Array[Block]
+pub fn parse_blocks(Array[Line], MarkdownOptions) -> Array[Block]
 
 pub fn parse_inlines(String) -> Array[Inline]
 

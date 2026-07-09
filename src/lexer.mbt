@@ -239,6 +239,19 @@ fn classify_line(line : String) -> (LineType, String) {
     }
   }
 
+  // Table row detection (GFM): contains |
+  let mut pipe_count = 0
+  let mut pi = 0
+  while pi < trimmed.length() {
+    if trimmed[pi] == 124 {
+      pipe_count = pipe_count + 1
+    } // '|'
+    pi = pi + 1
+  }
+  if pipe_count > 0 {
+    return (TableRow, trimmed)
+  }
+
   // Default: paragraph text
   (Paragraph, trimmed)
 }

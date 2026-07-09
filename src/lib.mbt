@@ -2,14 +2,14 @@
 /// Parse a Markdown string into a Block AST.
 pub fn parse(input : String) -> Array[Block] {
   let lines = tokenize(input)
-  parse_blocks(lines)
+  parse_blocks(lines, default_options())
 }
 
 ///|
 /// Parse a Markdown string into a Block AST with custom options.
-pub fn parse_with_opts(input : String, _opts : MarkdownOptions) -> Array[Block] {
+pub fn parse_with_opts(input : String, opts : MarkdownOptions) -> Array[Block] {
   let lines = tokenize(input)
-  parse_blocks(lines)
+  parse_blocks(lines, opts)
 }
 
 ///|
