@@ -1,0 +1,7 @@
+import {
+  "moonbit-texteditor/src" @md,
+}
+
+options(
+  "is-main": true,
+)
