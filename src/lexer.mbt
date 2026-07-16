@@ -23,6 +23,12 @@ pub enum LineType {
   TableRow
   /// Regular paragraph text
   Paragraph
+  /// Custom container start (::: name)
+  ContainerStart(String)
+  /// Custom container end (:::)
+  ContainerEnd
+  /// Footnote definition ([^label]: content)
+  FootnoteDefStart(String)
 }
 
 ///|
@@ -236,6 +242,32 @@ fn classify_line(line : String) -> (LineType, String) {
     if indent >= 4 && stripped_content(line).length() > 0 {
       let content = line[4:line.length()].to_owned()
       return (IndentedCode, content)
+    }
+  }
+
+  // Custom container start/end (:::)
+  if trimmed.length() >= 3 &&
+    trimmed[0] == 58 &&
+    trimmed[1] == 58 &&
+    trimmed[2] == 58 {
+    let rest = trimmed[3:].trim().to_owned()
+    if rest.length() > 0 {
+      return (ContainerStart(rest), trimmed)
+    } else {
+      return (ContainerEnd, trimmed)
+    }
+  }
+
+  // Footnote definition: [^label]: content
+  if trimmed.length() >= 4 && trimmed[0] == 91 && trimmed[1] == 94 {
+    let mut ci = 2
+    while ci < trimmed.length() && trimmed[ci] != 93 {
+      ci = ci + 1
+    }
+    if ci + 1 < trimmed.length() && trimmed[ci] == 93 && trimmed[ci + 1] == 58 {
+      let label = trimmed[2:ci].to_owned()
+      let content = trimmed[ci + 2:].trim().to_owned()
+      return (FootnoteDefStart(label), content)
     }
   }
 

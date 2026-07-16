@@ -20,12 +20,8 @@ pub fn render_md_opts(
   hard_wrap : Bool,
 ) -> String {
   let opts = @md.create_markdown_options(
-    enable_gfm_tables,
-    enable_gfm_tasklist,
-    enable_gfm_strikethrough,
-    enable_gfm_autolink,
-    enable_syntax_highlight,
-    hard_wrap,
+    enable_gfm_tables, enable_gfm_tasklist, enable_gfm_strikethrough, enable_gfm_autolink,
+    enable_syntax_highlight, hard_wrap,
   )
   @md.render_to_string_with_opts(input, opts)
 }

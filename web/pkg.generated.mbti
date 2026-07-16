@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-texteditor/web"
+
+// Values
+pub fn gen_toc(String) -> Array[(Int, String)]
+
+pub fn parse_fm(String) -> Array[(String, String)]
+
+pub fn render_md(String) -> String
+
+pub fn render_md_opts(String, Bool, Bool, Bool, Bool, Bool, Bool) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

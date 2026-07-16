@@ -61,6 +61,8 @@ pub enum Block {
   HtmlBlock(String)
   Table(Array[TableRow])
   BlankLine
+  Container(String, Array[Block])
+  FootnoteDef(String, Array[Block])
 }
 
 type DelimData
@@ -88,6 +90,7 @@ pub enum Inline {
   Image(String, String, String?)
   HtmlInline(String)
   AutoLink(String, Bool)
+  FootnoteRef(String)
 }
 
 type InlineNode
@@ -112,6 +115,9 @@ pub enum LineType {
   IndentedCode
   TableRow
   Paragraph
+  ContainerStart(String)
+  ContainerEnd
+  FootnoteDefStart(String)
 }
 
 pub struct ListItem {
