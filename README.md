@@ -57,6 +57,168 @@
 
 ---
 
+## 安装与使用
+
+### 环境要求
+
+- [MoonBit CLI](https://docs.moonbitlang.com/)（推荐最新稳定版）
+- Git
+
+### 安装方式
+
+**方式一：作为 MoonBit 项目依赖（推荐）**
+
+在目标项目的 `moon.pkg` 中添加依赖：
+
+```toml
+import {
+  "moonbit-texteditor/src" @md,
+}
+```
+
+然后运行 `moon update` 自动拉取。如果包已发布到 [mooncakes.io](https://mooncakes.io/)：
+
+```bash
+moon add moonbit-texteditor
+```
+
+**方式二：从源码构建**
+
+```bash
+git clone https://github.com/lexchb/moonbit-Texteditor.git
+cd moonbit-Texteditor
+moon build            # 构建原生目标
+moon build --target js   # 构建 JS 目标（浏览器使用）
+```
+
+### 运行示例
+
+**CLI 演示程序** — 展示所有支持的 Markdown 功能：
+
+```bash
+moon run cmd/main
+```
+
+**Web 交互式演示** — 实时 Markdown 编辑器：
+
+直接在浏览器中打开项目根目录下的 [`demo.html`](demo.html)（需要本地 HTTP 服务器）：
+
+```bash
+# Python
+python -m http.server 8000
+
+# Node.js
+npx serve .
+
+# 然后访问 http://localhost:8000/demo.html
+```
+
+### 使用方法
+
+本库提供从 `parse`（解析）到 `render`（渲染）的完整转换链路。
+
+#### 基础用法 — 一句话转换
+
+```moonbit
+let html = @md.render_to_string("# Hello World")
+// => "<h1>Hello World</h1>"
+```
+
+#### 带选项用法 — 控制 GFM 扩展开关
+
+```moonbit
+let opts = @md.create_markdown_options(
+  true,   // enable_gfm_tables
+  true,   // enable_gfm_tasklist
+  true,   // enable_gfm_strikethrough
+  true,   // enable_gfm_autolink
+  true,   // enable_syntax_highlight
+  false,  // hard_wrap
+)
+let html = @md.render_to_string_with_opts("~~text~~", opts)
+// => "<p><del>text</del></p>"
+```
+
+#### 分步用法 — 解析 AST → 手动处理 → 自定义渲染
+
+```moonbit
+// 第一步：解析 Markdown 为 AST
+let blocks = @md.parse("## Title\n\nSome **bold** text")
+
+// 第二步：手动检查和操作 AST
+match blocks[0] {
+  Heading(level, inlines) => println("Heading level: " + level.to_string())
+  _ => ()
+}
+
+// 第三步：渲染为 HTML
+let html = @md.render(blocks)
+```
+
+#### 解析 Frontmatter 元数据
+
+```moonbit
+let input = "---\ntitle: My Doc\nauthor: Alice\n---\n\n# Content"
+let (metadata, body) = @md.parse_frontmatter(input)
+// metadata = [("title", "My Doc"), ("author", "Alice")]
+// body     = "# Content"
+```
+
+#### 生成目录 (TOC)
+
+```moonbit
+let blocks = @md.parse("# A\n\n## B\n\n### C")
+let toc = @md.generate_toc(blocks)
+// toc = [(1, "A"), (2, "B"), (3, "C")]
+```
+
+#### 语法高亮（单独使用）
+
+```moonbit
+let highlighted = @md.highlight_code("fn main() {}", "rust")
+// => "<span class=\"hl-keyword\">fn</span> main() {}"
+```
+
+### 完整示例
+
+```moonbit
+fn main {
+  let input = "# Markdown 示例\n\n" +
+    "这是一个包含 **加粗** 和 *斜体* 的段落。\n\n" +
+    "| 表格 | 列2 |\n" +
+    "|------|-----|\n" +
+    "| 单元格1 | 单元格2 |\n\n" +
+    "- [x] 已完成任务\n" +
+    "- [ ] 未完成任务\n"
+
+  // 创建选项：启用表格、任务列表、删除线
+  let opts = @md.create_markdown_options(
+    true, true, true, true, true, false,
+  )
+  let html = @md.render_to_string_with_opts(input, opts)
+  println(html)
+}
+```
+
+### API 速查
+
+| 函数 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `parse(input)` | `String` | `Array[Block]` | 解析为 AST |
+| `parse_with_opts(input, opts)` | `String, MarkdownOptions` | `Array[Block]` | 带选项解析 |
+| `render(blocks)` | `Array[Block]` | `String` | AST → HTML |
+| `render_to_string(input)` | `String` | `String` | 一站式转换（默认选项） |
+| `render_to_string_with_opts(input, opts)` | `String, MarkdownOptions` | `String` | 带选项一站式转换 |
+| `render_html_with_opts(blocks, opts)` | `Array[Block], MarkdownOptions` | `String` | 带选项渲染 |
+| `parse_frontmatter(input)` | `String` | `(Array[(String,String)], String)` | 解析 Frontmatter |
+| `generate_toc(blocks)` | `Array[Block]` | `Array[(Int, String)]` | 生成目录（标题层级, 标题文本） |
+| `create_markdown_options(...)` | `6 × Bool` | `MarkdownOptions` | 创建解析选项 |
+| `default_options()` | — | `MarkdownOptions` | 默认选项（全部关闭） |
+| `highlight_code(code, lang)` | `String, String` | `String` | 代码语法高亮 |
+| `escape_html(s)` | `String` | `String` | HTML 转义 |
+
+---
+
 ## 二、架构设计
 
 ### 整体架构
@@ -97,21 +259,19 @@ moonbit-texteditor/
 │   ├── renderer_html.mbt         # HTML 渲染器
 │   ├── renderer.mbt              # 渲染器 trait 定义（方便扩展其他输出）
 │   ├── options.mbt               # 解析选项配置
+│   ├── syntax_highlight.mbt      # 语法高亮引擎
 │   ├── lib.mbt                   # 统一入口 API
 │   └── utils.mbt                 # 工具函数
-├── gfm/                          # GFM 扩展（可选包）
-│   ├── moon.pkg.json
-│   ├── table.mbt                 # 表格解析
-│   ├── task_list.mbt             # 任务列表
-│   ├── strikethrough.mbt         # 删除线
-│   └── autolink.mbt              # 自动链接
-├── test/
-│   ├── moon.pkg.json
-│   ├── commonmark_test.mbt       # CommonMark 规范测试
-│   └── gfm_test.mbt              # GFM 扩展测试
-└── bench/
-    ├── moon.pkg.json
-    └── benchmark.mbt             # 基准测试
+├── cmd/main/
+│   ├── moon.pkg.json             # CLI demo 包配置
+│   └── main.mbt                  # CLI 演示程序（13 个功能场景）
+├── web/
+│   ├── moon.pkg.json             # Web 包配置
+│   └── main.mbt                  # 浏览器端 JS 桥接入口
+├── demo.html                     # 交互式 Web 演示页面
+└── .github/workflows/
+    ├── ci.yml                    # CI（check / build / test）
+    └── copilot-setup-steps.yml   # Copilot 环境配置
 ```
 
 ### 核心数据结构设计
