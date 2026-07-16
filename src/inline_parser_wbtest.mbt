@@ -267,3 +267,20 @@ test "autolink: https url" {
   assert_true(html.contains("<a href=\"https://example.com/page\">"))
   println("Result: <a href=\"...\"> ✓")
 }
+
+///|
+test "footnote reference: inline" {
+  let input = "Here is a footnote reference[^1] in text."
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: footnote reference inline")
+  println("Input: " + input)
+  let blocks = parse(input)
+  let html = render_to_string(input)
+  println("HTML: " + html)
+  assert_true(html.contains("<sup>"))
+  assert_true(html.contains("class=\"footnote\""))
+  assert_true(html.contains(">1<"))
+  println("Result: FootnoteRef ✓")
+}

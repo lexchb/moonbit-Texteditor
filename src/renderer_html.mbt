@@ -132,6 +132,22 @@ pub fn HtmlRenderer::render_block(
       buf.write_string("</table>\n")
     }
     BlankLine => ()
+    Container(name, children) => {
+      buf.write_string("<div class=\"container-")
+      buf.write_string(escape_html(name))
+      buf.write_string("\">\n")
+      for child in children {
+        self.render_block(child, buf)
+      }
+      buf.write_string("</div>\n")
+    }
+    FootnoteDef(_label, children) => {
+      buf.write_string("<div class=\"footnote-def\">")
+      for child in children {
+        self.render_block(child, buf)
+      }
+      buf.write_string("</div>\n")
+    }
   }
 }
 
@@ -211,6 +227,15 @@ pub fn HtmlRenderer::render_inlines(
         buf.write_string("\">")
         buf.write_string(escape_html(url))
         buf.write_string("</a>")
+      }
+      FootnoteRef(label) => {
+        buf.write_string("<sup><a href=\"#fn-")
+        buf.write_string(escape_html(label))
+        buf.write_string("\" id=\"fnref-")
+        buf.write_string(escape_html(label))
+        buf.write_string("\" class=\"footnote\">")
+        buf.write_string(escape_html(label))
+        buf.write_string("</a></sup>")
       }
     }
   }

@@ -27,6 +27,10 @@ pub enum Block {
   Table(Array[TableRow])
   /// Blank line (separator)
   BlankLine
+  /// Custom container (::: name ... :::)
+  Container(String, Array[Block])
+  /// Footnote definition ([^label]: content)
+  FootnoteDef(String, Array[Block])
 }
 
 ///|
@@ -54,6 +58,8 @@ pub enum Inline {
   HtmlInline(String)
   /// Autolink (url or email)
   AutoLink(String, Bool)
+  /// Footnote reference (GFM extension)
+  FootnoteRef(String)
 }
 
 ///|

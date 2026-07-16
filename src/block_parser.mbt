@@ -12,6 +12,50 @@ pub fn parse_blocks(
     let line = lines[i]
 
     match line.typ {
+      ContainerStart(name) => {
+        // Collect lines inside the container until ContainerEnd or EOF
+        let inner_lines : Array[Line] = []
+        i = i + 1
+        while i < n {
+          match lines[i].typ {
+            ContainerEnd => {
+              i = i + 1
+              break
+            }
+            _ => {
+              inner_lines.push(lines[i])
+              i = i + 1
+            }
+          }
+        }
+        let inner_blocks = parse_blocks(inner_lines, opts)
+        blocks.push(Container(name, inner_blocks))
+      }
+      ContainerEnd =>
+        // Orphaned container end → skip
+        i = i + 1
+      FootnoteDefStart(label) => {
+        // Collect footnote definition content (paragraph-style, may span lines)
+        let def_lines : Array[String] = []
+        def_lines.push(line.content)
+        i = i + 1
+        while i < n {
+          match lines[i].typ {
+            Paragraph => {
+              def_lines.push(lines[i].content)
+              i = i + 1
+            }
+            Empty => {
+              i = i + 1
+              break
+            }
+            _ => break
+          }
+        }
+        let def_text = def_lines.join(" ")
+        let inner_blocks = parse_blocks(tokenize(def_text), opts)
+        blocks.push(FootnoteDef(label, inner_blocks))
+      }
       Heading(level) => {
         let inlines = parse_inlines_full(line.content, opts)
         blocks.push(Heading(level, inlines))

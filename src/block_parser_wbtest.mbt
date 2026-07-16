@@ -681,3 +681,82 @@ test "toc: empty blocks returns empty toc" {
   assert_eq(toc.length(), 0)
   println("Result: empty TOC ✓")
 }
+
+///|
+test "custom container: simple" {
+  let input = "::: tip\nThis is a tip\n:::"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: custom container")
+  println("Input: " + input)
+  let blocks = parse(input)
+  let html = render_to_string(input)
+  println("HTML: " + html)
+  assert_eq(blocks.length(), 1)
+  match blocks[0] {
+    Container(name, children) => {
+      assert_eq(name, "tip")
+      assert_eq(children.length(), 1)
+    }
+    _ => fail("Expected Container")
+  }
+  assert_true(html.contains("container-tip"))
+  println("Result: Container parsed ✓")
+}
+
+///|
+test "custom container: warning with multiple paragraphs" {
+  let input = "::: warning\nFirst paragraph\n\nSecond paragraph\n:::"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: container with multiple paragraphs")
+  println("Input: " + input)
+  let blocks = parse(input)
+  let html = render_to_string(input)
+  println("HTML: " + html)
+  assert_eq(blocks.length(), 1)
+  match blocks[0] {
+    Container(name, children) => {
+      assert_eq(name, "warning")
+      assert_eq(children.length(), 2)
+    }
+    _ => fail("Expected Container")
+  }
+  assert_true(html.contains("container-warning"))
+  println("Result: Container with multiple paragraphs ✓")
+}
+
+///|
+test "footnote: parse definition" {
+  let input = "Text[^1] here.\n\n[^1]: Footnote content."
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: footnote definition")
+  println("Input: " + input)
+  let blocks = parse(input)
+  let html = render_to_string(input)
+  println("HTML: " + html)
+  assert_true(blocks.length() >= 2)
+  assert_true(html.contains("footnote"))
+  println("Result: Footnote parsed ✓")
+}
+
+///|
+test "footnote: no body content" {
+  let input = "[^note]: Just a definition without reference"
+  println(
+    "──────────────────────────────────",
+  )
+  println("Test: footnote definition only")
+  println("Input: " + input)
+  let blocks = parse(input)
+  assert_eq(blocks.length(), 1)
+  match blocks[0] {
+    FootnoteDef(label, _children) => assert_eq(label, "note")
+    _ => fail("Expected FootnoteDef")
+  }
+  println("Result: FootnoteDef parsed ✓")
+}

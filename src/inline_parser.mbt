@@ -221,7 +221,21 @@ fn scan_to_nodes(text : String, opts : MarkdownOptions) -> Array[InlineNode] {
       }
     }
 
-    // 9. Link: [text](url)
+    // 9. Footnote reference: [^label]
+    if ch == 91 && i + 1 < n && text[i + 1] == 94 { // '[' + '^'
+      let mut ci = i + 2
+      while ci < n && text[ci] != 93 {
+        ci = ci + 1
+      }
+      if ci < n && text[ci] == 93 {
+        let label = text[i + 2:ci].to_owned()
+        nodes.push(Final(FootnoteRef(label)))
+        i = ci + 1
+        continue
+      }
+    }
+
+    // 10. Link: [text](url)
     if ch == 91 { // '['
       let result = try_link(text, i, false)
       match result {
