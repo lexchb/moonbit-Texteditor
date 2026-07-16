@@ -1,4 +1,4 @@
-name = "moonbit-texteditor"
+name = "lexchb/moonbit-texteditor"
 
 version = "0.1.0"
 
@@ -13,3 +13,7 @@ keywords = [ "markdown", "html", "parser", "renderer" ]
 preferred_target = "wasm-gc"
 
 description = "A pure MoonBit Markdown to HTML conversion library."
+
+options(
+  exclude: ["cmd", "web", "demo.html", "web.editor.js", "_build", ".github", "AGENTS.md"],
+)
